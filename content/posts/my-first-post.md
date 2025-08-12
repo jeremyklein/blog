@@ -1,5 +1,5 @@
 +++
-date = '2025-08-12T01:15:00-04:00'
+date = '2025-08-11T21:15:00-04:00'
 draft = false
 title = 'Welcome to My Blog'
 +++
