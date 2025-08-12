@@ -7,7 +7,8 @@ theme = "soho"
   description = "Personal blog and thoughts"
   
   [[params.socialIcons]]
-    name = "linkedin"
+    icon = "fa-linkedin-in"
+    title = "LinkedIn"
     url = "https://linkedin.com/in/jeremy-klein/"
   
 [menu]
