@@ -161,11 +161,17 @@ tone: "technical but accessible"
 
 ### How It Works
 1. **Create Outline**: Add `.md` file to `/outlines/` directory
-2. **Auto-Trigger**: GitHub Actions detects new outline file
-3. **Generate Content**: Claude 3.5 Sonnet expands outline into full blog post
-4. **Create PR**: Generated post placed in `content/posts/` with automatic PR
-5. **Archive**: Processed outline moved to `outlines/archived/`
-6. **Review**: Standard proofreading and review process
+2. **Push to Outline Branch**: Push outline to dedicated `outline` branch
+3. **Auto-Trigger**: GitHub Actions detects new outline file on `outline` branch
+4. **Generate Content**: Claude 3.5 Sonnet expands outline into full blog post
+5. **Create PR**: Generated post placed in `content/posts/` with automatic PR to `main`
+6. **Archive**: Processed outline moved to `outlines/archived/`
+7. **Review**: Standard proofreading and review process
+
+### Branch Structure
+- **`main` branch**: Published content and infrastructure
+- **`outline` branch**: Staging area for outline files (triggers generation)
+- **`generated-post-*` branches**: Temporary branches with generated content
 
 ### Generated Content Features
 - Proper Hugo frontmatter with current date

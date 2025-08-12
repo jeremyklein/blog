@@ -3,7 +3,7 @@ name: Generate Blog Post from Outline
 on:
   push:
     paths: ['outlines/*.md', 'outlines/*.yml']
-    branches: [main]
+    branches: [outline]
   workflow_dispatch:
     inputs:
       outline_file:

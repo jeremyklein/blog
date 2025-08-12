@@ -5,9 +5,48 @@ This directory contains outlines for blog posts that will be automatically conve
 ## How It Works
 
 1. **Create Outline**: Add a new `.md` file to this directory with your blog post outline
-2. **Auto-Generation**: GitHub Actions detects the new outline and generates a complete blog post
-3. **Review Process**: Generated post is placed in `content/posts/` and a PR is created for review
-4. **Archive**: Processed outlines are moved to `archived/` directory
+2. **Push to Outline Branch**: Push your outline to the `outline` branch to trigger generation
+3. **Auto-Generation**: GitHub Actions detects the outline and generates a complete blog post
+4. **Review Process**: Generated post is placed in `content/posts/` and a PR is created for review
+5. **Archive**: Processed outlines are moved to `archived/` directory
+
+## Branch Workflow
+
+### Setup (one-time)
+```bash
+# Create and switch to outline branch
+git checkout -b outline
+git push -u origin outline
+```
+
+### Creating Blog Posts
+```bash
+# Switch to outline branch
+git checkout outline
+
+# Create your outline file
+echo "---
+title: \"My New Blog Post\"
+tags: [\"tech\", \"tutorial\"]
+---
+
+# Outline
+- Introduction
+- Main content
+- Conclusion" > outlines/my-new-post.md
+
+# Push to trigger generation
+git add outlines/my-new-post.md
+git commit -m "Add outline for new blog post"
+git push origin outline
+```
+
+### What Happens Next
+1. GitHub Actions generates the complete blog post
+2. Creates a new branch with the generated content
+3. Opens a PR to merge the generated post to `main`
+4. Your outline is archived to `outlines/archived/`
+5. The automated proofreading system reviews the generated post
 
 ## Outline Format
 
