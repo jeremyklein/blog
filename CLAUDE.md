@@ -73,12 +73,50 @@ Main config in `hugo.toml`:
 1. Create posts with `hugo new posts/filename.md`
 2. Edit content and set `draft = false` when ready to publish
 3. Use `hugo server -D` to preview drafts locally
-4. Run `hugo` to build final site for deployment
+4. Create Pull Request for automated proofreading feedback
+5. Review and apply proofreading suggestions
+6. Merge PR to automatically build and deploy site
 
 ### Content Organization
 - **Taxonomies**: Posts support `tags = ["tag1", "tag2"]`, `categories = ["category"]`, `series = ["series-name"]` in frontmatter
 - **Menu items**: Configure in `hugo.toml` under `[menu]` section
 - **Static files**: Place images/assets in `/static/` to be copied directly to `/public/`
+
+## Automated Proofreading
+
+### Overview
+- **AI-Powered**: Uses Claude 3 Haiku for cost-effective proofreading (~$0.01-0.05 per post)
+- **GitHub Integration**: Automatically triggered on Pull Requests modifying blog posts
+- **Workflow**: `.github/workflows/proofread.yml` handles the automation
+- **Non-blocking**: Provides feedback without preventing publishing
+
+### How It Works
+1. **Trigger**: Opens/updates PR with changes to `content/posts/**/*.md` files
+2. **Analysis**: Claude reviews content for grammar, clarity, flow, tone, and technical accuracy
+3. **Feedback**: Posts detailed suggestions as PR comments
+4. **Updates**: Refreshes comments automatically when PR is updated
+
+### Setup Requirements
+- **API Key**: Anthropic API key stored in GitHub Secrets as `ANTHROPIC_API_KEY`
+- **Setup Guide**: Follow instructions in `SETUP_PROOFREADING.md`
+- **Permissions**: Workflow has read access to content and write access to PR comments
+
+### Proofreading Scope
+- ✅ Grammar and spelling corrections
+- ✅ Writing clarity and flow improvements
+- ✅ Sentence structure enhancements
+- ✅ Tone consistency analysis
+- ✅ Technical accuracy verification (when applicable)
+
+### Cost Efficiency
+- Uses Claude 3 Haiku (fastest, most economical model)
+- Only runs on PR changes, not every commit
+- Typical cost per blog post: $0.01-0.05
+
+### Workflow Integration
+- Seamlessly integrates with existing Git workflow
+- All feedback tracked in version control
+- Enables collaborative editing and review process
 
 ### Deployment
 
