@@ -70,11 +70,21 @@ Main config in `hugo.toml`:
 4. Theme assets (CSS, JS) are automatically included from `/themes/soho/static/`
 
 ### Content Workflow
+
+#### Traditional Workflow
 1. Create posts with `hugo new posts/filename.md`
 2. Edit content and set `draft = false` when ready to publish
 3. Use `hugo server -D` to preview drafts locally
 4. Create Pull Request for automated proofreading feedback
 5. Review and apply proofreading suggestions
+6. Merge PR to automatically build and deploy site
+
+#### AI-Assisted Workflow (New)
+1. Create outline in `outlines/` directory with YAML frontmatter
+2. GitHub Actions automatically generates full blog post using Claude 3.5 Sonnet
+3. Generated post is placed in `content/posts/` and PR is created
+4. Review generated content and make edits as needed
+5. Automated proofreading provides additional feedback
 6. Merge PR to automatically build and deploy site
 
 ### Content Organization
@@ -117,6 +127,65 @@ Main config in `hugo.toml`:
 - Seamlessly integrates with existing Git workflow
 - All feedback tracked in version control
 - Enables collaborative editing and review process
+
+## Automated Blog Post Generation
+
+### Overview
+- **AI-Powered Content Creation**: Uses Claude 3.5 Sonnet to generate complete blog posts from outlines
+- **File-Based Triggers**: Detects new outline files in `/outlines/` directory
+- **Workflow**: `.github/workflows/generate-blog-post.yml` handles the automation
+- **Integration**: Generated posts automatically go through the proofreading workflow
+
+### Directory Structure
+- `/outlines/` - Active outlines waiting for processing
+- `/outlines/archived/` - Processed outlines moved here after generation
+- `/outlines/README.md` - Complete documentation and examples
+
+### Outline Format
+Create markdown files with YAML frontmatter in `/outlines/`:
+```markdown
+---
+title: "Your Blog Post Title"
+tags: ["tag1", "tag2"]
+categories: ["category"]
+target_length: "1200-1500 words"
+tone: "technical but accessible"
+---
+
+# Outline
+- Hook and introduction
+- Main sections with key points
+- Implementation details
+- Conclusion
+```
+
+### How It Works
+1. **Create Outline**: Add `.md` file to `/outlines/` directory
+2. **Auto-Trigger**: GitHub Actions detects new outline file
+3. **Generate Content**: Claude 3.5 Sonnet expands outline into full blog post
+4. **Create PR**: Generated post placed in `content/posts/` with automatic PR
+5. **Archive**: Processed outline moved to `outlines/archived/`
+6. **Review**: Standard proofreading and review process
+
+### Generated Content Features
+- Proper Hugo frontmatter with current date
+- SEO-friendly filename (slugified from title)
+- Markdown formatting with appropriate headers
+- Technical accuracy and code examples
+- Consistent with existing blog style
+- Ready for proofreading workflow
+
+### Manual Triggering
+Can also manually trigger generation:
+```bash
+# Workflow dispatch with specific outline file
+gh workflow run generate-blog-post.yml -f outline_file="outlines/my-post.md"
+```
+
+### Cost Efficiency
+- Uses Claude 3.5 Sonnet for high-quality content generation
+- Typical cost: $0.10-0.25 per generated blog post
+- Significantly reduces writing time while maintaining quality
 
 ### Deployment
 
