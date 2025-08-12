@@ -174,8 +174,11 @@ jobs:
                 const slug = slugify(outlineData.title);
                 const outputFile = `content/posts/${slug}.md`;
 
+                // Ensure content ends with newline (Unix convention)
+                const normalizedPost = fullPost.endsWith('\n') ? fullPost : fullPost + '\n';
+
                 // Write the generated blog post
-                fs.writeFileSync(outputFile, fullPost);
+                fs.writeFileSync(outputFile, normalizedPost);
                 console.log(`Generated blog post: ${outputFile}`);
 
                 // Move outline to archived
