@@ -81,6 +81,20 @@ Main config in `hugo.toml`:
 - **Static files**: Place images/assets in `/static/` to be copied directly to `/public/`
 
 ### Deployment
+
+#### Automatic Deployment
+- **GitHub Actions**: Configured to deploy to GitHub Pages automatically on push to main branch
+- **Workflow**: `.github/workflows/deploy.yml` builds and deploys the site
+- **URL**: https://jeremyklein.github.io/blog/
+- **Setup**: Ensure GitHub Pages is enabled with "GitHub Actions" as source in repository settings
+
+#### Manual Deployment
 - Build output in `/public/` is a complete static site ready for deployment
 - Common targets: GitHub Pages, Netlify, Vercel, or any static hosting service
 - Ensure `baseURL` in `hugo.toml` matches your deployment domain
+
+#### Post-Push Deployment
+Every push to the `main` branch will automatically:
+1. Build the Hugo site with `hugo --gc --minify`
+2. Deploy to GitHub Pages
+3. Make the site available at the configured URL
