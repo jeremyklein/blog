@@ -2,7 +2,7 @@
 title: "Advanced Git Workflows: Beyond Basic Commands"
 tags: ["git", "version-control", "development", "workflow"]
 categories: ["programming"]
-target_length: "1400-1600 words"
+target_length: "1500-1700 words"
 tone: "technical but accessible, with practical examples"
 ---
 
