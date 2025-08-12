@@ -30,3 +30,9 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+
+# Blog generation temporary files
+generation-results.json
+package.json
+package-lock.json
+generate-blog.js

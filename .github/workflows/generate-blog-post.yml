@@ -1,0 +1,299 @@
+name: Generate Blog Post from Outline
+
+on:
+  push:
+    paths: ['outlines/*.md', 'outlines/*.yml']
+    branches: [outline]
+  workflow_dispatch:
+    inputs:
+      outline_file:
+        description: 'Path to outline file (e.g., outlines/my-post.md)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-blog-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Get changed outline files
+        id: changed-files
+        if: github.event_name == 'push'
+        uses: tj-actions/changed-files@v44
+        with:
+          files: outlines/*.md
+
+      - name: Setup blog generation script
+        run: |
+          cat > generate-blog.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const yaml = require('js-yaml');
+
+          // Helper function to slugify title for filename
+          function slugify(text) {
+            return text
+              .toLowerCase()
+              .replace(/[^a-z0-9 -]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+              .trim('-');
+          }
+
+          // Helper function to parse outline file
+          function parseOutline(filePath) {
+            const content = fs.readFileSync(filePath, 'utf8');
+            
+            // Extract YAML frontmatter
+            const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+            if (!frontmatterMatch) {
+              throw new Error('Invalid outline format - missing YAML frontmatter');
+            }
+
+            const frontmatter = yaml.load(frontmatterMatch[1]);
+            const outline = frontmatterMatch[2].trim();
+
+            return { ...frontmatter, outline };
+          }
+
+          // Function to generate blog post using Claude
+          async function generateBlogPost(outlineData) {
+            const prompt = `You are a technical blog writer. Generate a complete, high-quality blog post based on the following outline and specifications.
+
+          REQUIREMENTS:
+          - Write in a clear, engaging technical style
+          - Use proper markdown formatting with appropriate headers
+          - Target length: ${outlineData.target_length || '1000-1500 words'}
+          - Tone: ${outlineData.tone || 'technical but accessible'}
+          - Include code examples where relevant
+          - Write for developers and technical professionals
+
+          OUTLINE TO EXPAND:
+          ${outlineData.outline}
+
+          BLOG POST METADATA:
+          Title: ${outlineData.title}
+          Tags: ${outlineData.tags?.join(', ') || 'Not specified'}
+          Categories: ${outlineData.categories?.join(', ') || 'Not specified'}
+
+          Generate a complete blog post that:
+          1. Has an engaging introduction that hooks the reader
+          2. Follows the outline structure but expands each point into full paragraphs
+          3. Includes practical examples and actionable advice
+          4. Uses proper markdown formatting (headers, lists, code blocks, emphasis)
+          5. Concludes with a strong summary or call to action
+
+          Return ONLY the markdown content (without frontmatter - I'll add that separately).`;
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: 4000,
+                messages: [{
+                  role: 'user',
+                  content: prompt
+                }]
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error(`Claude API request failed: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.content[0].text;
+          }
+
+          // Function to create Hugo frontmatter
+          function createFrontmatter(outlineData) {
+            const now = new Date();
+            const date = now.toISOString().replace('T', ' ').substring(0, 19) + '-04:00';
+            
+            const frontmatter = [
+              '+++',
+              `date = '${date}'`,
+              `draft = false`,
+              `title = '${outlineData.title}'`
+            ];
+
+            if (outlineData.tags && outlineData.tags.length > 0) {
+              frontmatter.push(`tags = [${outlineData.tags.map(tag => `"${tag}"`).join(', ')}]`);
+            }
+
+            if (outlineData.categories && outlineData.categories.length > 0) {
+              frontmatter.push(`categories = [${outlineData.categories.map(cat => `"${cat}"`).join(', ')}]`);
+            }
+
+            frontmatter.push('+++', '');
+            return frontmatter.join('\n');
+          }
+
+          async function main() {
+            const outlineFiles = process.env.OUTLINE_FILES ? process.env.OUTLINE_FILES.split(' ') : 
+                                  process.env.SINGLE_OUTLINE ? [process.env.SINGLE_OUTLINE] : [];
+
+            const results = [];
+
+            for (const outlineFile of outlineFiles) {
+              if (!outlineFile.trim() || !fs.existsSync(outlineFile)) continue;
+
+              console.log(`Processing outline: ${outlineFile}`);
+              
+              try {
+                // Parse the outline
+                const outlineData = parseOutline(outlineFile);
+                console.log(`Generating blog post: "${outlineData.title}"`);
+
+                // Generate blog post content
+                const blogContent = await generateBlogPost(outlineData);
+
+                // Create the complete blog post with frontmatter
+                const frontmatter = createFrontmatter(outlineData);
+                const fullPost = frontmatter + '\n' + blogContent;
+
+                // Create output filename
+                const slug = slugify(outlineData.title);
+                const outputFile = `content/posts/${slug}.md`;
+
+                // Write the generated blog post
+                fs.writeFileSync(outputFile, fullPost);
+                console.log(`Generated blog post: ${outputFile}`);
+
+                // Move outline to archived
+                const archivedPath = outlineFile.replace('outlines/', 'outlines/archived/');
+                fs.renameSync(outlineFile, archivedPath);
+                console.log(`Archived outline: ${archivedPath}`);
+
+                results.push({
+                  outline: outlineFile,
+                  generated: outputFile,
+                  title: outlineData.title,
+                  archived: archivedPath
+                });
+
+              } catch (error) {
+                console.error(`Error processing ${outlineFile}:`, error.message);
+                results.push({
+                  outline: outlineFile,
+                  error: error.message
+                });
+              }
+            }
+
+            // Write results summary
+            fs.writeFileSync('generation-results.json', JSON.stringify(results, null, 2));
+            console.log('Blog post generation completed');
+          }
+
+          main().catch(console.error);
+          EOF
+
+          npm init -y
+          npm install js-yaml
+
+      - name: Generate blog posts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OUTLINE_FILES: ${{ steps.changed-files.outputs.all_changed_files || '' }}
+          SINGLE_OUTLINE: ${{ github.event.inputs.outline_file || '' }}
+        run: node generate-blog.js
+
+      - name: Create Pull Request
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (!fs.existsSync('generation-results.json')) {
+              console.log('No generation results found');
+              return;
+            }
+
+            const results = JSON.parse(fs.readFileSync('generation-results.json', 'utf8'));
+            const successful = results.filter(r => !r.error);
+            const failed = results.filter(r => r.error);
+
+            if (successful.length === 0) {
+              console.log('No blog posts were successfully generated');
+              return;
+            }
+
+            // Create commit
+            await exec.exec('git', ['config', 'user.name', 'github-actions[bot]']);
+            await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+            await exec.exec('git', ['add', '.']);
+            
+            const commitMsg = successful.length === 1 
+              ? `Generate blog post: "${successful[0].title}"`
+              : `Generate ${successful.length} blog posts from outlines`;
+            
+            await exec.exec('git', ['commit', '-m', commitMsg]);
+
+            // Create branch name
+            const branchName = successful.length === 1 
+              ? `generated-post/${successful[0].generated.replace('content/posts/', '').replace('.md', '')}`
+              : `generated-posts-${Date.now()}`;
+
+            await exec.exec('git', ['checkout', '-b', branchName]);
+            await exec.exec('git', ['push', 'origin', branchName]);
+
+            // Create PR body
+            let prBody = `## 🤖 Auto-Generated Blog Posts\n\n`;
+            prBody += `This PR contains blog posts automatically generated from outlines using Claude AI.\n\n`;
+            
+            if (successful.length > 0) {
+              prBody += `### ✅ Successfully Generated:\n`;
+              for (const result of successful) {
+                prBody += `- **"${result.title}"** → \`${result.generated}\`\n`;
+                prBody += `  - Source: \`${result.outline}\` (archived to \`${result.archived}\`)\n`;
+              }
+            }
+
+            if (failed.length > 0) {
+              prBody += `\n### ❌ Failed to Generate:\n`;
+              for (const result of failed) {
+                prBody += `- \`${result.outline}\`: ${result.error}\n`;
+              }
+            }
+
+            prBody += `\n### Next Steps:\n`;
+            prBody += `- Review the generated content for accuracy and style\n`;
+            prBody += `- Make any necessary edits\n`;
+            prBody += `- The automated proofreading system will provide additional feedback\n`;
+            prBody += `- Merge when ready to publish\n\n`;
+            prBody += `*Generated using Claude 3.5 Sonnet*`;
+
+            const prTitle = successful.length === 1 
+              ? `Generated blog post: "${successful[0].title}"`
+              : `Generated ${successful.length} blog posts from outlines`;
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: prTitle,
+              head: branchName,
+              base: 'main',
+              body: prBody
+            });
+
+            console.log(`Created PR: ${pr.html_url}`);
