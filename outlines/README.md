@@ -50,8 +50,20 @@ git push origin outline
 
 ## Outline Format
 
-Create a markdown file with YAML frontmatter:
+### Quick Start
+1. **Copy the template**: Use `TEMPLATE.md` as your starting point
+2. **Customize frontmatter**: Update title, tags, categories, etc.
+3. **Expand the outline**: Replace template sections with your specific content
+4. **Save and push**: Save as `your-topic.md` and push to trigger generation
 
+### Template Structure
+See `TEMPLATE.md` for a comprehensive outline template with:
+- Detailed frontmatter options
+- Structured outline sections
+- Writing tips and best practices
+- Example topics and approaches
+
+### Basic Format
 ```markdown
 ---
 title: "Your Blog Post Title"
