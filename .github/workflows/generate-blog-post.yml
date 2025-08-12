@@ -180,7 +180,13 @@ jobs:
 
                 // Move outline to archived
                 const archivedPath = outlineFile.replace('outlines/', 'outlines/archived/');
-                fs.renameSync(outlineFile, archivedPath);
+                
+                // Ensure archived directory exists
+                fs.mkdirSync('outlines/archived', { recursive: true });
+                
+                // Copy and delete instead of rename for better compatibility
+                fs.copyFileSync(outlineFile, archivedPath);
+                fs.unlinkSync(outlineFile);
                 console.log(`Archived outline: ${archivedPath}`);
 
                 results.push({
