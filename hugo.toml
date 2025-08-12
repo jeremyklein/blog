@@ -6,6 +6,10 @@ theme = "soho"
 [params]
   description = "Personal blog and thoughts"
   
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://linkedin.com/in/jeremy-klein/"
+  
 [menu]
   [[menu.main]]
     name = "Posts"
