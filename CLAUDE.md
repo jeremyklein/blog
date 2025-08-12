@@ -1,0 +1,86 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Development Commands
+
+### Local Development
+```bash
+hugo server          # Start development server with live reload (usually on localhost:1313)
+hugo server -D       # Include draft posts in development server
+hugo server --bind 0.0.0.0 --port 1313  # Bind to all interfaces
+```
+
+### Building
+```bash
+hugo                 # Build static site to /public/ directory
+hugo -D              # Build including draft posts
+hugo --minify        # Build with minified output
+```
+
+### Content Creation
+```bash
+hugo new posts/post-name.md        # Create new post with archetype template
+hugo new posts/my-article.md       # Creates content/posts/my-article.md with frontmatter
+```
+
+## Project Architecture
+
+### Hugo Static Site Structure
+- **Generator**: Hugo static site generator
+- **Theme**: Soho theme (minimalist, mobile-first, based on Hyde)
+- **Content**: Markdown files with TOML frontmatter
+- **Output**: Static HTML/CSS/JS in `/public/`
+
+### Key Directories
+- `/content/posts/` - Blog post markdown files
+- `/themes/soho/` - Theme files (layouts, CSS, JS)
+- `/public/` - Generated static site (git-ignored build output)
+- `/static/` - Static assets copied directly to public
+- `/layouts/` - Custom layout overrides (currently empty)
+- `/archetypes/` - Content templates for `hugo new`
+
+### Content Structure
+Posts use TOML frontmatter:
+```toml
++++
+date = '2025-08-01T08:59:49-04:00'
+draft = true
+title = 'My First Post'
++++
+```
+
+### Theme Configuration
+Main config in `hugo.toml`:
+- Site title, baseURL, language settings
+- Theme specification: `theme="soho"`
+- Soho theme supports custom CSS/JS, social icons, SEO features
+
+#### Soho Theme Customization
+- **Custom styling**: Add `customCss = ["css/blog.css"]` and `customJs = ["js/blog.js"]` in `[params]`
+- **Profile picture**: Set `profilePicture = "images/profile.png"` or `gravatar = "email@example.com"`
+- **Social icons**: Add `[[params.socialIcons]]` blocks for LinkedIn, GitHub, Twitter, etc.
+- **Theme color**: Override with `themeColor = "#fc2803"`
+- **SEO**: Built-in support for Open Graph, Schema.org, Twitter Cards
+
+### Build Process
+1. Hugo processes content files and applies theme templates
+2. Generates static HTML/CSS/JS in `/public/`
+3. `/public/` contains complete deployable site
+4. Theme assets (CSS, JS) are automatically included from `/themes/soho/static/`
+
+### Content Workflow
+1. Create posts with `hugo new posts/filename.md`
+2. Edit content and set `draft = false` when ready to publish
+3. Use `hugo server -D` to preview drafts locally
+4. Run `hugo` to build final site for deployment
+
+### Content Organization
+- **Taxonomies**: Posts support `tags = ["tag1", "tag2"]`, `categories = ["category"]`, `series = ["series-name"]` in frontmatter
+- **Menu items**: Configure in `hugo.toml` under `[menu]` section
+- **Static files**: Place images/assets in `/static/` to be copied directly to `/public/`
+
+### Deployment
+- Build output in `/public/` is a complete static site ready for deployment
+- Common targets: GitHub Pages, Netlify, Vercel, or any static hosting service
+- Ensure `baseURL` in `hugo.toml` matches your deployment domain
