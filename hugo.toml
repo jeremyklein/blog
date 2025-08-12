@@ -1,4 +1,13 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://jeremyklein.github.io/blog/'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
-theme="soho"
+title = 'Jeremy Klein Blog'
+theme = "soho"
+
+[params]
+  description = "Personal blog and thoughts"
+  
+[menu]
+  [[menu.main]]
+    name = "Posts"
+    url = "/posts/"
+    weight = 1
